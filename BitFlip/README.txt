@@ -1,4 +1,5 @@
-# BitFlip
+BitFlip
+_______
 
 A simple game, where the goal is to turn the entire board red.
 
