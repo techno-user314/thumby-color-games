@@ -331,6 +331,7 @@ while game_running:
                 rumble = True
                 engine_io.rumble(0.25)
                 menu = True
+                continue
             
             if engine_io.UP.is_just_pressed:
                 score += 1
@@ -338,13 +339,11 @@ while game_running:
               
                 lanes.append(get_next_lane(score))
                 for i, lane in enumerate(lanes):
-                    if lane is not None:
-                        lane.update_position(len(lanes) - 1 - i)
+                    lane.update_position(len(lanes) - 1 - i)
                 
-                if lanes[0] is not None:
-                    lanes[0].destroy_objects()
-                    lanes[0].box.mark_destroy()
-                    lanes.pop(0)
+                lanes[0].destroy_objects()
+                lanes[0].box.mark_destroy()
+                lanes.pop(0)
 
                 player.sprite.rotation = 0
 
@@ -363,6 +362,7 @@ while game_running:
                     lanes[i].box.mark_destroy()
                     lanes[i] = None
                 menu = True
+                continue
 
 engine_save.save("world", world)
 engine_save.save("highscore", highscore)
