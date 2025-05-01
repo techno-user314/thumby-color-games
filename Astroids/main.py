@@ -56,7 +56,7 @@ class Bullet:
 class Player:
     def __init__(self):
         self.sprite = Sprite2DNode(Vector2(0, 0),
-                                   TextureResource("/Games/Astroids/spaceship.bmp"),
+                                   TextureResource("/Games/Asteroids/spaceship.bmp"),
                                    layer=1)
         #self.sprite = Rectangle2DNode(Vector2(0, 0), 7, 7, layer=1)
         self.shield_sprite = Circle2DNode(Vector2(0, 0), 7,
