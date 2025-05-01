@@ -13,6 +13,10 @@ from engine_math import Vector2
 from engine_resources import TextureResource
 from engine_nodes import Rectangle2DNode, CameraNode, Text2DNode, Sprite2DNode
 
+GRASS_COLOR = Color(0.75, 0, 0.75)
+STREET_COLOR = Color(0.15, 0.15, 0.15)
+RIVER_COLOR = Color(0.075, 0, 0.5)
+
 engine_save.set_location("save.data")
 
 world = engine_save.load("world", 1) # Used for the random generator seed
@@ -36,7 +40,8 @@ class Player:
         sprite_resource = TextureResource("/Games/FroggyRoad/frog.bmp")
         self.sprite = Sprite2DNode(Vector2(0, 24),
                                    sprite_resource,
-                                   rotation=pi/2, layer=3)
+                                   transparent_color=Color(1, 1, 1),
+                                   rotation=0, layer=3)
         #self.sprite = Rectangle2DNode(position=Vector2(0, 24), rotation=pi/2,
         #                              height=10, width=10, layer=3)
 
@@ -44,8 +49,8 @@ class Player:
         xpos = self.sprite.position.x
         self.sprite.position.x = max(min(xpos + direction * 8, 56), -56)
 
-        if direction == -1: self.sprite.rotation = pi
-        elif direction == 1: self.sprite.rotation = 0
+        if direction == -1: self.sprite.rotation = pi/2
+        elif direction == 1: self.sprite.rotation = -(pi/2)
 
 
 class MovingObject:
@@ -55,7 +60,8 @@ class MovingObject:
 
         self.sprite = Sprite2DNode(Vector2(0, 0),
                                    TextureResource(sprite_file),
-                                   layer=3)
+                                   transparent_color=Color(1, 1, 1),
+                                   layer=2)
         #self.sprite = Rectangle2DNode(height=6, width=10, layer=2)
         #self.sprite.position = Vector2(0, 0)
 
@@ -142,22 +148,22 @@ class Lane:
 class Grass(Lane):
     def __init__(self):
         super().__init__(0, 0, 0)
-        self.box.color = Color(0.75, 0, 0.75)
+        self.box.color = GRASS_COLOR
       
 class Street(Lane):
     def __init__(self, speed, spawn_rate):
         super().__init__(speed, spawn_rate, 1)
-        self.box.color = Color(0.15, 0.15, 0.15)
+        self.box.color = STREET_COLOR
 
 class RiverLog(Lane):
     def __init__(self, speed, spawn_rate):
         super().__init__(speed, spawn_rate, 2)
-        self.box.color = Color(0.075, 0, 0.5)
+        self.box.color = RIVER_COLOR
       
 class RiverLily(Lane):
     def __init__(self, speed, spawn_rate):
         super().__init__(speed, spawn_rate, 3)
-        self.box.color = Color(0.075, 0, 0.5)
+        self.box.color = RIVER_COLOR
 
 
 def get_next_lane(score):
@@ -339,6 +345,8 @@ while game_running:
                     lanes[0].destroy_objects()
                     lanes[0].box.mark_destroy()
                     lanes.pop(0)
+
+                player.sprite.rotation = 0
 
             if engine_io.LEFT.is_just_pressed:
                 player.move(-1)
