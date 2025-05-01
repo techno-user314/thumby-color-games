@@ -1,4 +1,4 @@
-Astroids
+Asteroids
 ________
 
 A clone of the popular 1980's Atari game, with a couple tweaks.
