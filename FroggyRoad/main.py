@@ -74,15 +74,17 @@ class MovingObject:
 class Car(MovingObject):
     def __init__(self, speed):
         super().__init__(speed, "/Games/FroggyRoad/car.bmp")
+        self.width = 10
 
 class Log(MovingObject):
     def __init__(self, speed):
         super().__init__(speed, "/Games/FroggyRoad/log.bmp")
-        self.sprite.width = 25
+        self.width = 25
 
 class Lily(MovingObject):
     def __init__(self, speed):
         super().__init__(speed, "/Games/FroggyRoad/lily.bmp")
+        self.width = 10
 
 
 class Lane:
@@ -227,8 +229,8 @@ def check_collision(lane, player):
     if lane.ltype == 1: # Street
         dead = False
         for car in lane.objects:
-            car_left = car.sprite.position.x - car.sprite.width/2
-            car_right = car.sprite.position.x + car.sprite.width/2
+            car_left = car.sprite.position.x - car.width/2
+            car_right = car.sprite.position.x + car.width/2
             if player_right >= car_left and player_right < car_right:
                 dead = True
                 break
@@ -238,8 +240,8 @@ def check_collision(lane, player):
               
     elif lane.ltype == 2: # Log river
         for log in lane.objects:
-            log_left = log.sprite.position.x - log.sprite.width/2
-            log_right = log.sprite.position.x + log.sprite.width/2
+            log_left = log.sprite.position.x - log.width/2
+            log_right = log.sprite.position.x + log.width/2
             if player_x >= log_left and player_x <= log_right:
                 player.sprite.position.x += lane.speed * lane.direction
                 dead = False
@@ -247,8 +249,8 @@ def check_collision(lane, player):
               
     elif lane.ltype == 3: # Lily river
         for lily in lane.objects:
-            lily_left = lily.sprite.position.x - lily.sprite.width/2
-            lily_right = lily.sprite.position.x + lily.sprite.width/2
+            lily_left = lily.sprite.position.x - lily.width/2
+            lily_right = lily.sprite.position.x + lily.width/2
             if player_x >= lily_left and player_x <= lily_right:
                 player.sprite.position.x += lane.speed * lane.direction
                 dead = False
