@@ -4,13 +4,13 @@ __________
 The Atari game Frogger, but it's infinite like Crossy Road. It also has re-playable worlds.
 
 Menu Controls:
-  - "A" to start the game
+  - A button starts the game
   - Up/Down on +-pad to select world number
-  - Right on +-pad to select a random world
+  - Right on +-pad to select a last world (#99)
   - Left on +-pad to go to select world 1
 
 Game Controls:
-  - Up to move forward
-  - Right/left to move thier respective directions
+  - Up or Right Bumper to move forward
+  - Right/Left to move thier respective directions
 
 Don't get hit by cars, or drown in water!
