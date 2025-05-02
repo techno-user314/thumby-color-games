@@ -12,5 +12,6 @@ Menu Controls:
 Game Controls:
   - Up or Right Bumper to move forward
   - Right/Left to move thier respective directions
+  - Menu button ends the game and returns to menu
 
 Don't get hit by cars, or drown in water!
