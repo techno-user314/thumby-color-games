@@ -7,4 +7,5 @@ Controls:
   - Up on the +-pad engages the rocket engine
   - Left/Right on the +-pad, or use the bumpers to rotate the rocket
   - Menu button pauses the game
-  - A button resumes/starts the game
+  - A button fires missle (or resumes/starts the game)
+  - B button activates shield (shield usage consumes points)
