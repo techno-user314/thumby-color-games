@@ -6,6 +6,5 @@ Just copy the selected game folder onto your Thumby Color and enjoy!
 
 Game instructions are included in a README in the game folders.
 
-## Hopefully coming in the near future:
-- Astroids (yes, the 1980's game by Atari)
+## Hopefully coming in the near future!
 - Ports of some games from the original Thumby
