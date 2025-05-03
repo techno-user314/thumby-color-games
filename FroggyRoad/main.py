@@ -26,6 +26,7 @@ highscore = engine_save.load("highscore", 0) # Global high score
 score = 0 # Number of lanes survived
 lanes = []
 danger_streak = 0 # Number of dangerous lanes in a row
+last_river_direction = -1 # Used to ensure consecutive rivers always flow at opposites
 
 menu = False
 rumble = False
@@ -94,17 +95,20 @@ class Lily(MovingObject):
 
 
 class Lane:
-    def __init__(self, speed, spawn_rate, lane_type):
+    def __init__(self, speed, direction, spawn_rate, lane_type):
         self.ltype = lane_type
         self.speed = speed
-        self.direction = random.choice([-1, 1])
+        self.direction = direction
+        
         self.spawn_rate = spawn_rate
-      
+        self.spawn_timer = 100
+        self.skip_spawn = random.randint(2, 10)
+        self.skip_spawn_timer = 0
+
         self.box = Rectangle2DNode(width=128, height=16, layer=1)
         self.box.position = Vector2(0, 0)
 
         self.objects = []
-        self.spawn_timer = 100
 
     def update_position(self, pos_id):
         self.box.position = Vector2(0, 16*pos_id - 56)
@@ -121,10 +125,10 @@ class Lane:
 
         # Spawn new objects
         self.spawn_timer += 1
-        if self.spawn_timer > self.spawn_rate + random.randint(-5, 10):
+        if self.spawn_timer > self.spawn_rate:
             self.spawn_timer = 0
-
-            if random.randint(1, 16) != 1:
+            self.skip_spawn_timer += 1
+            if self.skip_spawn_timer < self.skip_spawn:
                 if self.ltype == 0:
                     pass
                 elif self.ltype == 1:
@@ -136,6 +140,8 @@ class Lane:
                   
                 if self.ltype != 0:
                     self.objects[-1].adjust_y(self.box.position.y)
+            else:
+                self.skip_spawn_timer = 0
 
         # Move current objects
         for obj in self.objects:
@@ -147,31 +153,30 @@ class Lane:
 
 class Grass(Lane):
     def __init__(self):
-        super().__init__(0, 0, 0)
+        super().__init__(0, 0, 0, 0)
         self.box.color = GRASS_COLOR
       
 class Street(Lane):
-    def __init__(self, speed, spawn_rate):
-        super().__init__(speed, spawn_rate, 1)
+    def __init__(self, speed, direction, spawn_rate):
+        super().__init__(speed, direction, spawn_rate, 1)
         self.box.color = STREET_COLOR
 
 class RiverLog(Lane):
-    def __init__(self, speed, spawn_rate):
-        super().__init__(speed, spawn_rate, 2)
+    def __init__(self, speed, direction, spawn_rate):
+        super().__init__(speed, direction, spawn_rate, 2)
         self.box.color = RIVER_COLOR
       
 class RiverLily(Lane):
-    def __init__(self, speed, spawn_rate):
-        super().__init__(speed, spawn_rate, 3)
+    def __init__(self, speed, direction, spawn_rate):
+        super().__init__(speed, direction, spawn_rate, 3)
         self.box.color = RIVER_COLOR
 
 
 def get_next_lane(score):
     """
     Generate the next Lane based only on score.
-    Assumes random.seed() is set externally if reproducibility is needed.
     """
-    global danger_streak
+    global danger_streak, last_river_direction
   
     # Calculate difficulty based on score
     difficulty = min(score // 25, 5)  # Cap difficulty at 5
@@ -206,19 +211,31 @@ def get_next_lane(score):
         danger_streak += 1
         speed = random.uniform(0.8 + difficulty * 0.5, 1.2 + difficulty * 0.5)
         spawn_rate = 65 - 9 * difficulty
-        return Street(speed=speed, spawn_rate=spawn_rate)
+        return Street(speed, random.choice([1, -1]), spawn_rate)
 
     elif lane_type == 'RiverLily':
         danger_streak += 1
         speed = random.uniform(0.8 + difficulty * 0.25, 1.2 + difficulty * 0.25)
         spawn_rate = 65 - 9 * difficulty
-        return RiverLily(speed=speed, spawn_rate=spawn_rate)
+        if last_river_direction == -1:
+            direction = 1
+            last_river_direction = 1
+        elif last_river_direction == 1:
+            direction = -1
+            last_river_direction = -1
+        return RiverLily(speed, direction, spawn_rate)
 
     elif lane_type == 'RiverLog':
         danger_streak += 1
         speed = random.uniform(0.8 + difficulty * 0.25, 1.2 + difficulty * 0.25)
         spawn_rate = 65 - 9 * difficulty
-        return RiverLog(speed=speed, spawn_rate=spawn_rate)
+        if last_river_direction == -1:
+            direction = 1
+            last_river_direction = 1
+        elif last_river_direction == 1:
+            direction = -1
+            last_river_direction = -1
+        return RiverLog(speed, direction, spawn_rate)
 
 def check_collision(lane, player):
     if lane.ltype == 0: # Grass
@@ -269,7 +286,7 @@ scoreboard = Text2DNode(position=Vector2(0, -56), layer=4,
                         letter_spacing=1.1, line_spacing=1.1)
 player = Player()
 lanes = [Grass(), Grass(), Grass(), Grass(), Grass(),
-         RiverLog(1, 75), Grass(), Street(1, 75)]
+         RiverLog(1, -1, 75), Grass(), Street(1, 1, 75)]
 for i, lane in enumerate(lanes):
     lane.update_position(len(lanes) - 1 - i)
 
@@ -285,7 +302,7 @@ while game_running:
                 engine_io.rumble(0)
         if menu:
             scoreboard.position = Vector2(0, -32)
-            scoreboard.text = f"World Number: {world}\nPress A to start\n\nHighscore: {highscore}\nachieved in world\n{highworld}"
+            scoreboard.text = f"World {world}\nYour score {score}\n\nHigh: {highscore}\nachieved in world\n{highworld}"
             if engine_io.A.is_just_pressed:
                 # Delete old game
                 menu = False
@@ -297,18 +314,20 @@ while game_running:
                         lane.destroy_objects()
                         lane.box.mark_destroy()
                 # Create new game
+                danger_streak = 0
+                last_river_direction = -1
                 random.seed(world)
                 lanes = [Grass(), Grass(), Grass(), Grass(), Grass(),
-                         RiverLog(1, 75), Grass(), Street(1, 75)]
+                         RiverLog(1, -1, 75), Grass(), Street(1, 1, 75)]
                 for i, lane in enumerate(lanes):
                     lane.update_position(len(lanes) - 1 - i)
 
             if engine_io.LEFT.is_just_pressed:
                 world = 1
             if engine_io.RIGHT.is_just_pressed:
-                world = random.randint(1, 99)
+                world = 99
             if engine_io.UP.is_just_pressed:
-                world += 1
+                world = min(99, world+1)
             if engine_io.DOWN.is_just_pressed:
                 world = max(1, world - 1)
 
@@ -324,7 +343,8 @@ while game_running:
                     highscore = score
                     highworld = world
                 for i in range(len(lanes)):
-                    if 1 <= i <= 3: continue # Skip the lanes near the player so they see how they died
+                    if 1 <= i <= 3:
+                        continue # Skip deleting the lanes near the player so they see how they died
                     lanes[i].destroy_objects()
                     lanes[i].box.mark_destroy()
                     lanes[i] = None
@@ -333,7 +353,7 @@ while game_running:
                 menu = True
                 continue
             
-            if engine_io.UP.is_just_pressed:
+            if engine_io.UP.is_just_pressed or engine_io.RB.is_just_pressed:
                 score += 1
                 scoreboard.text = f"Score: {score}"
               
@@ -357,7 +377,6 @@ while game_running:
                     highscore = score
                     highworld = world
                 for i in range(len(lanes)):
-                    if 1 <= i <= 3: continue # Skip the lanes near the player so they see how they died
                     lanes[i].destroy_objects()
                     lanes[i].box.mark_destroy()
                     lanes[i] = None
